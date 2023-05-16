@@ -12,7 +12,10 @@ const { productRoutes } = require('./routes/product/product.router')
 
 require('dotenv').config()
 const app = express()
-/* server site port  
+/* server site port
+zava-invoic
+25UJlISukMreB3EI
+
 */
 const port = process.env.PORT || 5001
 // middlewares 
