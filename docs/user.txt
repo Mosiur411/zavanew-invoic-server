@@ -1,0 +1,6 @@
+/* API User */
+1.http://localhost:5001/register // user register 
+2.http://localhost:5001/user //  single  user get 
+3.http://localhost:5001/updateProfile?_id=6455bb61edc223cfbb0537a0 // user Update
+4.
+5.
