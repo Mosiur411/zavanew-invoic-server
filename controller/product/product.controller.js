@@ -3,6 +3,8 @@ const { errorMessageFormatter, getDataFromCsv } = require("../../utils/helpers")
 const { ProductModel } = require("../../model/product/product.model");
 const { validateObjectId } = require("../../utils/validators");
 const { doesDepartmentExist } = require("./development.controller");
+
+
 const addProduct = async (req, res) => {
     try {
         const data = req.body;
@@ -13,6 +15,9 @@ const addProduct = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+
+
+
 /* ==================== add bulk product ============  */
 
 const getValidProducts = async (productsFromCSV) => {
@@ -48,9 +53,8 @@ const addBulkProduct = async (req, res) => {
         const file = req.file;
         if (!file) return res.status(400).json({ error: '"products_csv" is required.' })
         const productsFromCSV = await getDataFromCsv(file.path, req.user._id)
-        const { validProducts, errors } = await getValidProducts(productsFromCSV)
-        const products = await ProductModel.insertMany(validProducts)
-        return res.status(201).json({ products, errors })
+        const products = await ProductModel.insertMany(productsFromCSV)
+        return res.status(201).json({ products })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
@@ -59,7 +63,7 @@ const addBulkProduct = async (req, res) => {
 
 const getProduct = async (req, res) => {
     try {
-        const product = await ProductModel.find({}).sort({ _id: -1 }).populate(['development_id', 'user'])
+        const product = await ProductModel.find({}).sort({ _id: -1 })
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)

@@ -18,19 +18,23 @@ const getUserByEmail = async (email) => {
 const registerUser = async (req, res) => {
     try {
         const data = req.body;
-        const firebaseUser = await getAuth().getUserByEmail(data?.email);
-        if(!firebaseUser.uid){
+        const firebaseUser = await getAuth().getUserByEmail(data?.email)
+        if (!firebaseUser?.uid) {
             return res.status(401).json({ error: 'Unauthorized User' })
         }
-        data.uid = firebaseUser.uid
-        const user = await UserModel(data)
+        const user = await UserModel({ email: data?.email, uid: firebaseUser.uid, role: 'admin' })
         await user.save()
-        return res.status(201).json({ user })
+        if (user) {
+            await getAuth().setCustomUserClaims(firebaseUser.uid, { ...firebaseUser.customClaims, role: user.role, _id: user.id })
+            return res.status(200).json({ message: "user" })
+        }
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
     }
 }
+
+
 /* user get  */
 const getUser = async (req, res) => {
     try {

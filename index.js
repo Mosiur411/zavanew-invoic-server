@@ -9,12 +9,12 @@ const { categoriesRoutes } = require('./routes/product/categories.routes')
 const { subCategoriesRoutes } = require('./routes/product/subCategoties.router')
 const { childsubRoutes } = require('./routes/product/childSubCategories.router')
 const { productRoutes } = require('./routes/product/product.router')
+const { cartRoutes } = require('./routes/cart.routes')
+const { oderRoutes } = require('./routes/order.router')
 
 require('dotenv').config()
 const app = express()
 /* server site port
-zava-invoic
-25UJlISukMreB3EI
 
 */
 const port = process.env.PORT || 5001
@@ -33,11 +33,16 @@ app.use('/subCategories', Auth_Rqeuired, subCategoriesRoutes)
 app.use('/childSubCategories', Auth_Rqeuired, childsubRoutes)
 app.use('/product', Auth_Rqeuired, productRoutes)
 
+/* cart items  */
+app.use('/cart', Auth_Rqeuired, cartRoutes)
+app.use('/order', Auth_Rqeuired, oderRoutes)
+
+
 // database
 const mongodb_uri = process.env.PROD_DB;
 connectDatabase(mongodb_uri)
 initializeFirebase()
 
-app.listen(port,"0.0.0.0", () => {
+app.listen(port, "0.0.0.0", () => {
     console.log(`Example app listening on port ${process.env.PORT}`)
 })

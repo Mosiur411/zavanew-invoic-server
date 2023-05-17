@@ -24,11 +24,6 @@ const UserSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid email`
         },
     },
-    password: {
-        type: String,
-        trim: true,
-        required: true
-    },
     image: {
         type: String,
         trim: true,
@@ -58,7 +53,7 @@ const UserSchema = new mongoose.Schema({
     },
 }, { timestamps: true })
 
-UserSchema.pre('save', function (next) {
+/* UserSchema.pre('save', function (next) {
     const user = this;
     if (!user.isModified('password')) return next()
     bcrypt.genSalt(+process.env.SALT_WORK_FACTOR, function (err, salt) {
@@ -70,7 +65,7 @@ UserSchema.pre('save', function (next) {
             next()
         })
     })
-})
+}) */
 
 module.exports = {
     UserModel: mongoose.model('User', UserSchema),
