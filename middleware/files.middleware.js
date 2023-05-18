@@ -3,13 +3,15 @@ const fs = require("fs")
 const { AllowedFileTypes, maxFileSize } = require('../utils/constants')
 const { getRandomString } = require('../utils/helpers')
 
-if (!fs.existsSync("./uploads")) {
+/* if (!fs.existsSync("./uploads")) {
   fs.mkdirSync("./uploads")
-}
+} */
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "./uploads")
+    fs.mkdir('./uploads/',(err)=>{
+      cb(null, './uploads/');
+   })
   },
   filename: function (req, file, cb) {
     const newFIleName = `${getRandomString()}-${file.originalname}`
