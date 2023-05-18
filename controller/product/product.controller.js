@@ -62,9 +62,22 @@ const addBulkProduct = async (req, res) => {
 }
 
 const getProduct = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search
     try {
-        const product = await ProductModel.find({}).sort({ _id: -1 })
-        return res.status(201).json({ product })
+        const totalProduct = await ProductModel.countDocuments();
+        let totalPages = Math.ceil(totalProduct / limit);
+        const skip = (page - 1) * limit;
+        if (search) {
+            const product = await ProductModel.find({
+                "$or": [{ product_name: { $regex: search } }, { upc: { $regex: search } }, { upcBox: { $regex: search } },]
+            }).sort({ _id: -1 }).skip(skip).limit(limit)
+            totalPages = product.length;
+            return res.status(200).json({ product, totalPages })
+        }
+        const product = await ProductModel.find({}).sort({ _id: -1 }).skip(skip).limit(limit)
+        return res.status(201).json({ product, totalPages })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)

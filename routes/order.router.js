@@ -1,6 +1,7 @@
 const { Router } = require('express')
-const { addOrder } = require('../controller/order.controller')
+const { addOrder, getOrder } = require('../controller/order.controller')
 const oderRoutes = Router()
-oderRoutes.post('/',addOrder)
+oderRoutes.post('/', addOrder)
+oderRoutes.get('/', getOrder)
 
 module.exports = { oderRoutes }

@@ -2,15 +2,15 @@ const mongoose = require("mongoose")
 const bcrypt = require("bcrypt")
 const { validateEmail } = require("../utils/validators")
 const { UserRegisterType } = require("../utils/constants")
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        trim: true,
-    },
-    uid:{
+const EmployeeSchema = new mongoose.Schema({
+    uid: {
         type: String,
         trim: true,
         ref: 'Development',
+    },
+    name: {
+        type: String,
+        trim: true,
     },
     email: {
         type: String,
@@ -23,19 +23,33 @@ const UserSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid email`
         },
     },
-    image: {
+    password: {
         type: String,
         trim: true,
     },
-    number: {
+    phone: {
         type: Number,
         trim: true,
+    },
+    nid: {
+        type: String,
+        trim: true,
+        unique: true,
+        required: true,
     },
     country: {
         type: String,
         trim: true,
     },
     city: {
+        type: String,
+        trim: true,
+    },
+    address: {
+        type: String,
+        trim: true,
+    },
+    image: {
         type: String,
         trim: true,
     },
@@ -67,5 +81,5 @@ const UserSchema = new mongoose.Schema({
 }) */
 
 module.exports = {
-    UserModel: mongoose.model('User', UserSchema),
+    EmployeeModel: mongoose.model('Employee', EmployeeSchema),
 }

@@ -22,6 +22,22 @@ const addOrder = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+const getOrder = async (req, res) => {
+    try {
+        const { id } = req.query;
+        let order;
+        if (id == '12') {
+            order = await OrderModel.find({}).sort({ _id: -1 }).populate(['user', 'coustomerId']);
+        } else {
+            order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).populate(['user', 'coustomerId'])
+        }
+
+        return res.status(200).json({ order })
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
 
 
-module.exports = { addOrder }
+module.exports = { addOrder, getOrder }

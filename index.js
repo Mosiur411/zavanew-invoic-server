@@ -11,6 +11,8 @@ const { childsubRoutes } = require('./routes/product/childSubCategories.router')
 const { productRoutes } = require('./routes/product/product.router')
 const { cartRoutes } = require('./routes/cart.routes')
 const { oderRoutes } = require('./routes/order.router')
+const { employeeRoutes } = require('./routes/employee.router')
+const { coustomerRoutes } = require('./routes/coustomer.router')
 
 require('dotenv').config()
 const app = express()
@@ -36,6 +38,8 @@ app.use('/product', Auth_Rqeuired, productRoutes)
 /* cart items  */
 app.use('/cart', Auth_Rqeuired, cartRoutes)
 app.use('/order', Auth_Rqeuired, oderRoutes)
+app.use('/employee', Auth_Rqeuired, employeeRoutes)
+app.use('/coustomer', Auth_Rqeuired, coustomerRoutes)
 
 
 // database
