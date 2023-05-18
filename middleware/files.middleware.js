@@ -9,17 +9,20 @@ const { getRandomString } = require('../utils/helpers')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../uploads/")
+    fs.mkdir('./uploads/', (err) => {
+      cb(null, './uploads/');
+    });
+    // cb(null, "../uploads/")
   },
   filename: function (req, file, cb) {
     const newFIleName = `${getRandomString()}-${file.originalname}`
     cb(null, newFIleName)
   },
 })
-  
-const upload = multer({ 
+
+const upload = multer({
   storage: storage,
-  limits: {fileSize: maxFileSize},
+  limits: { fileSize: maxFileSize },
   fileFilter: (req, file, cb) => {
     if (!AllowedFileTypes.has(file.mimetype)) {
       cb(null, false)
