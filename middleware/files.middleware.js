@@ -9,7 +9,7 @@ const { getRandomString } = require('../utils/helpers')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    fs.mkdir('./uploads/',(err)=>{
+    fs.mkdirSync('./uploads/',(err)=>{
       cb(null, './uploads/');
    })
   },
