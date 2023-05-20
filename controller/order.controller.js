@@ -27,11 +27,11 @@ const getOrder = async (req, res) => {
         const { id } = req.query;
         let order;
         if (id == '12') {
-            order = await OrderModel.find({}).sort({ _id: -1 }).populate(['user', 'coustomerId']);
-        } else {
-            order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).populate(['user', 'coustomerId'])
-        }
+            order = await OrderModel.find({}).sort({ _id: -1 }).populate(['user', 'coustomerId','item.product_id']);
 
+        } else {
+            order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).populate(['user', 'coustomerId','item.product_id'])
+        }
         return res.status(200).json({ order })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)

@@ -13,6 +13,7 @@ const { cartRoutes } = require('./routes/cart.routes')
 const { oderRoutes } = require('./routes/order.router')
 const { employeeRoutes } = require('./routes/employee.router')
 const { coustomerRoutes } = require('./routes/coustomer.router')
+const { dashboardRoutes } = require('./routes/dashboard.routes')
 
 require('dotenv').config()
 const app = express()
@@ -27,6 +28,9 @@ app.use(express.json())
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
+
+/* dashboard.controller.js */
+app.use('/dashboard', dashboardRoutes)
 /* route    childSubCategories */
 app.use('/', userRoutes)
 app.use('/development', Auth_Rqeuired, developmentRoutes)
