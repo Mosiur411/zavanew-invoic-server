@@ -28,5 +28,35 @@ const getCart = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+/* card update  */
+const updateCart = async (req, res) => {
+    try {
+        const { _id, data } = req.query;
+        const cardData = await CartModel.findById(_id).populate('product_id')
+        const productPrice = cardData?.product_id?.price
+        const cart = await CartModel.findOneAndUpdate({ _id }, { quantity: Number(data), price: data * productPrice }, { new: true })
 
-module.exports = { addCart, getCart }
+        return res.status(201).json({ cart })
+
+
+
+
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+/* car delete  */
+const deleteCart = async (req, res) => {
+    try {
+        const { _id } = req.query;
+        const cart = await CartModel.findOneAndRemove(_id);
+        return res.status(201).json({ cart })
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+module.exports = { addCart, getCart, deleteCart, updateCart }

@@ -38,6 +38,14 @@ const OrderSchema = new mongoose.Schema({
         type: Number,
         trim: true,
     },
+    checkNumber: {
+        type: String,
+        trim: true,
+    },
+    checkProviderName: {
+        type: String,
+        trim: true,
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         trim: true,
