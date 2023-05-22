@@ -6,6 +6,8 @@ const { OrderModel } = require("../model/order.model");
 
 const getRrecord = async (req, res) => {
     try {
+        const { _id, role } = req.user
+        const isAdmin = role == 'admin' ? true : false
         const product = await ProductModel.aggregate([
             {
                 $group: {
@@ -17,7 +19,7 @@ const getRrecord = async (req, res) => {
                         $sum: '$quantity'
                     },
                     cost: {
-                        $sum:{ $multiply: ["$quantity", "$cost"] }
+                        $sum: { $multiply: ["$quantity", "$cost"] }
                     },
                 }
             },
@@ -29,7 +31,19 @@ const getRrecord = async (req, res) => {
                 }
             }
         ])
+        let pipeline = [];
+        if (isAdmin) {
+            pipeline = [];
+        } else {
+            pipeline = [
+                {
+                    $match: { user: _id }
+                },
+            ];
+        }
+
         const sale = await OrderModel.aggregate([
+            ...pipeline,
             {
                 $unwind: "$item"
             },

@@ -48,6 +48,12 @@ const CoustomerSchema = new mongoose.Schema({
         trim: true,
         required: true,
     },
+    zip_code: {
+        type: String,
+        trim: true,
+    },
+
+    
     address: {
         type: String,
         trim: true,

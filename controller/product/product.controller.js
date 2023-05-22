@@ -15,9 +15,6 @@ const addProduct = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-
-
-
 /* ==================== add bulk product ============  */
 
 const getValidProducts = async (productsFromCSV) => {

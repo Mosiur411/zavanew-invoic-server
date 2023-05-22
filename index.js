@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
 })
 
 /* dashboard.controller.js */
-app.use('/dashboard', dashboardRoutes)
+app.use('/dashboard', Auth_Rqeuired, dashboardRoutes)
 /* route    childSubCategories */
 app.use('/', userRoutes)
 app.use('/development', Auth_Rqeuired, developmentRoutes)

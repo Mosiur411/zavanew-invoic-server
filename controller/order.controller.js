@@ -25,12 +25,19 @@ const addOrder = async (req, res) => {
 const getOrder = async (req, res) => {
     try {
         const { id } = req.query;
+        const { role, _id } = req.user;
+
+
         let order;
         if (id == '12') {
-            order = await OrderModel.find({}).sort({ _id: -1 }).populate(['user', 'coustomerId','item.product_id']);
+            if (role !== 'admin') {
+                order = await OrderModel.find({ user: _id }).sort({ _id: -1 }).populate(['user', 'coustomerId', 'item.product_id']);
+            } else {
+                order = await OrderModel.find({}).sort({ _id: -1 }).populate(['user', 'coustomerId', 'item.product_id']);
+            }
 
         } else {
-            order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).populate(['user', 'coustomerId','item.product_id'])
+            order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).populate(['user', 'coustomerId', 'item.product_id'])
         }
         return res.status(200).json({ order })
     } catch (err) {
