@@ -61,12 +61,16 @@ const addBulkProduct = async (req, res) => {
 const getProduct = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search.toLowerCase()
+    const searchValue = req.query.search;
+    const escapedSearchValue = searchValue.replace(/%/g, "\\%");
+    const search = new RegExp("\\b" + escapedSearchValue + "\\b");
+
+    /*  searchString.replace(/%/gi, '\\%').replace(/ /gi, '\\s'); */
     try {
         const totalProduct = await ProductModel.countDocuments();
         let totalPages = Math.ceil(totalProduct / limit);
         const skip = (page - 1) * limit;
-        if (search) {
+        if (searchValue) {
             const product = await ProductModel.find({
                 "$or": [{ product_name: { $regex: search } }, { upc: { $regex: search } }, { upcBox: { $regex: search } }]
             }).sort({ _id: -1 }).skip(skip).limit(limit)
@@ -94,13 +98,11 @@ const updateProduct = async (req, res) => {
 
 
 
-
-
 }
 const deleteProduct = async (req, res) => {
     try {
         const { _id } = req.query;
-        const product = await ProductModel.findOneAndRemove(_id);
+        const product = await ProductModel.deleteOne({ _id: _id })
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
