@@ -3,6 +3,7 @@ const admin = require('firebase-admin');
 const { errorMessageFormatter } = require("../utils/helpers");
 const { EmployeeModel } = require("../model/employee.model");
 const { getAuth } = require("firebase-admin/auth");
+const { OrderModel } = require("../model/order.model");
 
 const addEmployee = async (req, res) => {
     try {
@@ -47,13 +48,13 @@ const getEmployee = async (req, res) => {
             };
 
             if (isNumber) {
-                query.$or.push({ phone: Number(search) }); 
+                query.$or.push({ phone: Number(search) });
             }
-
             const employee = await EmployeeModel.find(query)
                 .sort({ _id: -1 })
                 .skip(skip)
                 .limit(limit);
+
             totalPages = employee.length;
             return res.status(200).json({ employee, totalPages });
         }
@@ -62,6 +63,37 @@ const getEmployee = async (req, res) => {
             .sort({ _id: -1 })
             .skip(skip)
             .limit(limit);
+        // let pipeline = [];
+        // const employeeIds = employee.map(employee => employee._id);
+        // pipeline = [
+        //     {
+        //         $match: { user: { $in: employeeIds } }
+        //     },
+        // ];
+        // const sale = await OrderModel.aggregate([
+        //     ...pipeline,
+        //     {
+        //         $unwind: "$item"
+        //     },
+        //     {
+        //         $group: {
+        //             _id: 1,
+        //             quantity: {
+        //                 $sum: "$item.quantity"
+        //             },
+        //             total: { $sum: "$item.price" }
+        //         }
+        //     },
+        //     {
+        //         $project: {
+        //             quantity: true,
+        //             total: true,
+        //         }
+        //     }
+
+        // ])
+        // console.log(sale)
+
         return res.status(201).json({ employee, totalPages });
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)

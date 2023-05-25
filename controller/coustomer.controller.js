@@ -44,7 +44,33 @@ const getCoustomer = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+const updateCoustomer = async (req, res) => {
+    try {
+        const { _id } = req.query;
+        const data = req.body;
+        const coustomer = await CoustomerModel.findOneAndUpdate({ _id }, { ...data }, { new: true })
+        return res.status(201).json({ coustomer })
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+const deleteCoustomer = async (req, res) => {
+    try {
+        const { _id } = req.query;
+        const coustomer = await CoustomerModel.deleteOne({ _id: _id })
+        return res.status(201).json({ coustomer })
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+
 module.exports = {
     addCoustomer,
-    getCoustomer
+    getCoustomer,
+    updateCoustomer,
+    deleteCoustomer
 }
