@@ -16,7 +16,7 @@ const addCart = async (req, res) => {
             await addToCar.save()
         } else {
             const qut = Number(checkProuct[0]?.quantity) + Number(data?.quantity);
-            const productPrice = checkProuct[0]?.product_id?.price
+            const productPrice = checkProuct[0]?.price / Number(checkProuct[0]?.quantity)
             addToCar = await CartModel.findOneAndUpdate({ product_id }, { quantity: qut, price: productPrice * qut }, { new: true })
         }
 
