@@ -61,16 +61,14 @@ const addBulkProduct = async (req, res) => {
 const getProduct = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const searchValue = req.query.search;
-    const escapedSearchValue = searchValue.replace(/%/g, "\\%");
-    const search = new RegExp("\\b" + escapedSearchValue + "\\b");
-
-    /*  searchString.replace(/%/gi, '\\%').replace(/ /gi, '\\s'); */
+    const searchQuery = req.query.search;
+    const sanitizedSearchQuery = searchQuery.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+    const search = new RegExp(sanitizedSearchQuery, 'i');
     try {
         const totalProduct = await ProductModel.countDocuments();
         let totalPages = Math.ceil(totalProduct / limit);
         const skip = (page - 1) * limit;
-        if (searchValue) {
+        if (searchQuery && search) {
             const product = await ProductModel.find({
                 "$or": [{ product_name: { $regex: search } }, { upc: { $regex: search } }, { upcBox: { $regex: search } }]
             }).sort({ _id: -1 }).skip(skip).limit(limit)

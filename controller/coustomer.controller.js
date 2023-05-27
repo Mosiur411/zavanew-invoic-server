@@ -16,12 +16,15 @@ const addCoustomer = async (req, res) => {
 const getCoustomer = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search
+    const searchQuery = req.query.search;
+    const sanitizedSearchQuery = searchQuery.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+    const search = new RegExp(sanitizedSearchQuery, 'i');
+
     try {
         const totalCoustomer = await CoustomerModel.countDocuments();
         let totalPages = Math.ceil(totalCoustomer / limit);
         const skip = (page - 1) * limit;
-        if (search) {
+        if (search && searchQuery) {
             const coustomer = await CoustomerModel.find({
                 "$or": [{ name: { $regex: search } },
                 { comphonyName: { $regex: search } },

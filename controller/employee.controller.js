@@ -28,12 +28,14 @@ const addEmployee = async (req, res) => {
 const getEmployee = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search;
+    const searchQuery = req.query.search;
+    const sanitizedSearchQuery = searchQuery.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+    const search = new RegExp(sanitizedSearchQuery, 'i');
     try {
         const totalEmployee = await EmployeeModel.countDocuments();
         let totalPages = Math.ceil(totalEmployee / limit);
         const skip = (page - 1) * limit;
-        if (search) {
+        if (search && searchQuery) {
             const isNumber = /^\d+$/.test(search);
             const query = {
                 $or: [
