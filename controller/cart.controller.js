@@ -60,7 +60,7 @@ const updateCart = async (req, res) => {
 const deleteCart = async (req, res) => {
     try {
         const { _id } = req.query;
-        const cart = await CartModel.findOneAndRemove(_id);
+        const cart = await CartModel.deleteOne({ _id: _id })
         return res.status(201).json({ cart })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
