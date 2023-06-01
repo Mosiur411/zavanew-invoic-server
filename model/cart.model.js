@@ -15,7 +15,7 @@ const CartSchema = new mongoose.Schema({
         type: Number,
         trim: true,
     },
-    price: {
+    saleing_Price: {
         type: Number,
         trim: true,
     },
