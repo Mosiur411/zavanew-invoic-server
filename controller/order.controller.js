@@ -6,11 +6,15 @@ const { OrderModel } = require("../model/order.model");
 const addOrder = async (req, res) => {
 
     try {
+        let totalQuantity = 0;
         const data = req.body;
         const user = req.user._id;
         const card = await CartModel.find({ user: user }).sort({ _id: -1 }).populate('product_id');
         const items = { item: [...card] }
-        const order = await OrderModel({ ...data, ...items, user: user })
+        for (let i = 0; i < items?.item.length; i++) {
+            totalQuantity += items?.item[i].quantity;
+        }
+        const order = await OrderModel({ ...data, ...items, user: user, totalQuantity: totalQuantity })
         await order.save()
         const updateProduct = card?.map(async (data) => await ProductModel.updateOne({ _id: data?.product_id?._id }, { $set: { quantity: data?.product_id?.quantity - data?.quantity } }));
         /* ============= set order =============  */
@@ -26,8 +30,6 @@ const getOrder = async (req, res) => {
     try {
         const { id } = req.query;
         const { role, _id } = req.user;
-
-
         let order;
         if (id == '12') {
             if (role !== 'admin') {

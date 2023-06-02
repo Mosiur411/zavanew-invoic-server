@@ -15,7 +15,7 @@ const OrderSchema = new mongoose.Schema({
             type: Number,
             trim: true,
         },
-        price: {
+        saleing_Price: {
             type: Number,
             trim: true,
         },
@@ -35,6 +35,10 @@ const OrderSchema = new mongoose.Schema({
         trim: true,
     },
     totalPrice: {
+        type: Number,
+        trim: true,
+    },
+    totalQuantity: {
         type: Number,
         trim: true,
     },

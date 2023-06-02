@@ -13,7 +13,7 @@ const getRrecord = async (req, res) => {
                 $group: {
                     _id: 1,
                     price: {
-                        $sum: '$price'
+                        $sum: '$saleing_Price'
                     },
                     quantity: {
                         $sum: '$quantity'
@@ -53,7 +53,7 @@ const getRrecord = async (req, res) => {
                     quantity: {
                         $sum: "$item.quantity"
                     },
-                    total: { $sum: "$item.price" }
+                    total: { $sum: "$item.saleing_Price" }
                 }
             },
             {
