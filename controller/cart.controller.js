@@ -26,12 +26,14 @@ const addCart = async (req, res) => {
 const getCart = async (req, res) => {
     try {
         let totalPrice = 0;
+        let totalQuantity = 0;
         const user_id = req.user._id;
         const items = await CartModel.find({ user: user_id }).sort({ _id: -1 }).populate('product_id');
         for (let i = 0; i < items.length; i++) {
             totalPrice += items[i].saleing_Price;
+            totalQuantity += items[i].quantity;
         }
-        return res.status(200).json({ items, totalPrice })
+        return res.status(200).json({ items, totalPrice, totalQuantity })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
