@@ -30,6 +30,10 @@ const OrderSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    customId: {
+        type: String,
+        trim: true,
+    },
     address: {
         type: String,
         trim: true,
@@ -64,6 +68,25 @@ const OrderSchema = new mongoose.Schema({
     }
 
 }, { timestamps: true })
+
+// Pre-save middleware
+OrderSchema.pre('save', function (next) {
+    const doc = this;
+    if (doc.isNew) {
+        // Check for the last inserted document
+        OrderSchema.findOne({}, {}, { sort: { customId: -1 } }, function (err, lastUser) {
+            if (err) return next(err);
+            // Increment the numeric part
+            const numericPart = lastUser ? parseInt(lastUser.customId.substring(4)) + 1 : 1;
+            doc.customId = 'zavawholesale' + numericPart;
+            next();
+        });
+    } else {
+        next();
+    }
+});
+
+
 module.exports = {
     OrderModel: mongoose.model('order', OrderSchema),
 }
