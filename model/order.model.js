@@ -73,11 +73,13 @@ const OrderSchema = new mongoose.Schema({
 OrderSchema.pre('save', function (next) {
     const doc = this;
     if (doc.isNew) {
-        const numericPart = doc.coustomerId?.slice(-1, 6)
+        const objectId = doc?.coustomerId;
+        const objectIdString = objectId.toString();
+        const numericPart = objectIdString.substr(objectIdString.length - 6);
         doc.orderId = 'zw' + numericPart;
         next();
     } else {
-        next();
+        // next();
     }
 });
 
