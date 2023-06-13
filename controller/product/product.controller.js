@@ -3,12 +3,15 @@ const { errorMessageFormatter, getDataFromCsv } = require("../../utils/helpers")
 const { ProductModel } = require("../../model/product/product.model");
 const { validateObjectId } = require("../../utils/validators");
 const { doesDepartmentExist } = require("./development.controller");
+const { PurchasesModel } = require("../../model/purchases.model");
 
 
 const addProduct = async (req, res) => {
     try {
         const data = req.body;
         const product = await ProductModel.create({ ...data, user: req.user._id })
+        const purchaseAdd = { cost: product?.cost, quantity: product?.quantity, product_id: product?._id }
+        await PurchasesModel.create({ ...purchaseAdd, user: req.user._id })
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
@@ -59,7 +62,7 @@ const addBulkProduct = async (req, res) => {
 }
 
 const getProduct = async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
+    const page = parseInt(req.query.page) || 0;
     const limit = parseInt(req.query.limit) || 10;
     const searchQuery = req.query.search;
     const sanitizedSearchQuery = searchQuery.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
@@ -67,11 +70,11 @@ const getProduct = async (req, res) => {
     try {
         const totalProduct = await ProductModel.countDocuments();
         let totalPages = Math.ceil(totalProduct / limit);
-        const skip = (page - 1) * limit;
+        const skip = page * limit;
         if (searchQuery && search) {
             const product = await ProductModel.find({
                 "$or": [{ product_name: { $regex: search } }, { upc: { $regex: search } }, { upcBox: { $regex: search } }]
-            }).sort({ _id: -1 }).skip(skip).limit(limit)
+            }).sort({ _id: 1 }).skip(skip).limit(limit)
             totalPages = product.length;
             return res.status(200).json({ product, totalPages })
         }
@@ -88,6 +91,15 @@ const updateProduct = async (req, res) => {
         const { _id } = req.query;
         const data = req.body;
         const product = await ProductModel.findOneAndUpdate({ _id }, { ...data }, { new: true })
+
+
+        
+        const activeCost = await PurchasesModel.findOneAndUpdate({ product_id: _id, status: true }, { cost: product?.cost, quantity: product?.quantity }, { new: true })
+        console.log(activeCost)
+
+
+
+
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
@@ -107,4 +119,52 @@ const deleteProduct = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-module.exports = { addProduct, getProduct, updateProduct, deleteProduct, addBulkProduct }
+
+
+/* all porduct Purchases  */
+
+
+
+addPurchases = async (req, res) => {
+    try {
+        const user = req?.user;
+        const data = req?.body;
+        const extraCostAdd = await PurchasesModel.create({ ...data, user: req.user._id })
+        return res.status(201).json(extraCostAdd)
+        /* const user = req?.user
+        await PurchasesModel.create({ product_id: _id, quantity: unitGross, cost: cost, user: req.user._id })
+
+        const products = await ProductModel.find({})
+        await products?.map(async (data) => {
+            const { _id, cost, unitGross } = data;
+            await PurchasesModel.create({ product_id: _id, quantity: unitGross, cost: cost, user: req.user._id })
+        })
+        return res.status(201).json({ message: "insoallha" }) */
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+
+const addProductPurchases = async (req, res) => {
+    try {   /* quantity */
+        const user = req?.user
+        const products = await ProductModel.find({})
+        await products?.map(async (data) => {
+            const { _id, cost, unitGross } = data;
+            await PurchasesModel.create({ product_id: _id, quantity: unitGross, cost: cost, user: req.user._id })
+        })
+        return res.status(201).json({ message: "insoallha" })
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+
+
+
+
+
+module.exports = { addProduct, getProduct, updateProduct, deleteProduct, addBulkProduct, addProductPurchases, addPurchases }

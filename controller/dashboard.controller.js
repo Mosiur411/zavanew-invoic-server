@@ -3,34 +3,36 @@ const { errorMessageFormatter } = require("../utils/helpers");
 const { ProductModel } = require("../model/product/product.model");
 const { CartModel } = require("../model/cart.model");
 const { OrderModel } = require("../model/order.model");
+const { PurchasesModel } = require("../model/purchases.model");
+const moment = require("moment/moment");
+const { RefundModel } = require("../model/refund.model");
+const { ShrinkageModel } = require("../model/shrinkage.model");
 
 const getRrecord = async (req, res) => {
     try {
-        const { _id, role } = req.user
-        const isAdmin = role == 'admin' ? true : false
-        const product = await ProductModel.aggregate([
-            {
-                $group: {
-                    _id: 1,
-                    price: {
-                        $sum: '$saleing_Price'
-                    },
-                    quantity: {
-                        $sum: '$quantity'
-                    },
-                    cost: {
-                        $sum: { $multiply: ["$quantity", "$cost"] }
-                    },
+        let invoicTotal = 0;
+        let totalDue = 0;
+        let { fromDate, toDate } = req.query;
+        fromDate = fromDate == 'undefined' ? new Date() : fromDate;
+        toDate = toDate == 'undefined' ? new Date() : toDate;
+        var fromDateHandel = new Date(fromDate);
+        var toDateHandel = new Date(toDate);
+        fromDate = moment(fromDateHandel).startOf('day').toDate()
+        toDate = moment(toDateHandel).endOf('day').toDate()
+
+        let reportOptions = {
+            filter: {
+                createdAt: {
+                    $gte: fromDate,
+                    $lte: toDate
                 }
             },
-            {
-                $project: {
-                    cost: true,
-                    price: true,
-                    quantity: true
-                }
+            sort: {
+                createdAt: -1,
             }
-        ])
+        }
+        const { _id, role } = req.user
+        const isAdmin = role == 'admin' ? true : false
         let pipeline = [];
         if (isAdmin) {
             pipeline = [];
@@ -43,6 +45,8 @@ const getRrecord = async (req, res) => {
         }
 
         const sale = await OrderModel.aggregate([
+             { $match: reportOptions.filter },
+             { $sort: reportOptions.sort },
             ...pipeline,
             {
                 $unwind: "$item"
@@ -53,18 +57,101 @@ const getRrecord = async (req, res) => {
                     quantity: {
                         $sum: "$item.quantity"
                     },
-                    total: { $sum: "$item.saleing_Price" }
+                    total: { $sum: "$item.saleing_Price" },
                 }
             },
             {
                 $project: {
                     quantity: true,
                     total: true,
+                    totalAmount: true
                 }
             }
+        ]);
+        const product = await ProductModel.aggregate([
+            ...pipeline,
+            {
+                $group: {
+                    _id: 1,
+                    quantity: {
+                        $sum: '$quantity'
+                    },
+                    cost: {
+                        $sum: { $multiply: ["$quantity", "$cost"] }
+                    },
 
+                }
+            },
+            {
+                $project: {
+                    quantity: true,
+                    cost: true,
+                }
+            }
         ])
-        return res.status(200).json({ products: product, sales: sale })
+
+        let payment = await OrderModel.aggregate([
+
+            ...pipeline,
+            { $match: reportOptions.filter },
+            { $sort: reportOptions.sort },
+            {
+                $group: {
+                    _id: "$payment",
+                    totalAmount: { $sum: "$totalPrice" },
+                }
+            }
+        ],
+        );
+
+
+        for (const item of payment) {
+            if (item._id !== 'due') {
+                invoicTotal += item.totalAmount;
+            } else {
+                totalDue += item.totalAmount;
+            }
+        }
+        payment = { totalInvoic: invoicTotal, totalDue: totalDue }
+
+        const refund = await RefundModel.aggregate([
+            { $match: reportOptions.filter },
+            { $sort: reportOptions.sort },
+            ...pipeline,
+            {
+                $group: {
+                    _id: 1,
+                    quantity: {
+                        $sum: '$quantity'
+                    },
+                }
+            },
+            {
+                $project: {
+                    quantity: true,
+                }
+            }
+        ]);
+        const shrinkage = await ShrinkageModel.aggregate([
+            { $match: reportOptions.filter },
+            { $sort: reportOptions.sort },
+            ...pipeline,
+            {
+                $group: {
+                    _id: 1,
+                    quantity: {
+                        $sum: '$quantity'
+                    },
+                }
+            },
+            {
+                $project: {
+                    quantity: true,
+                }
+            }
+        ]);
+
+        return res.status(200).json({ products: product, sale: sale, payment: payment, refund: refund, shrinkage: shrinkage })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)

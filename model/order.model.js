@@ -30,7 +30,7 @@ const OrderSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
-    customId: {
+    orderId: {
         type: String,
         trim: true,
     },
@@ -73,14 +73,9 @@ const OrderSchema = new mongoose.Schema({
 OrderSchema.pre('save', function (next) {
     const doc = this;
     if (doc.isNew) {
-        // Check for the last inserted document
-        OrderSchema.findOne({}, {}, { sort: { customId: -1 } }, function (err, lastUser) {
-            if (err) return next(err);
-            // Increment the numeric part
-            const numericPart = lastUser ? parseInt(lastUser.customId.substring(4)) + 1 : 1;
-            doc.customId = 'zavawholesale' + numericPart;
-            next();
-        });
+        const numericPart = doc.coustomerId?.slice(-1, 6)
+        doc.orderId = 'zw' + numericPart;
+        next();
     } else {
         next();
     }

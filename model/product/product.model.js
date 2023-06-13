@@ -102,6 +102,10 @@ const ProductSchema = new mongoose.Schema({
         type: Number,
         trim: true,
     },
+    unitGross: {
+        type: Number,
+        trim: true,
+    },
     /* ============== */
     images: [productImages],
     imagesTitle: {
