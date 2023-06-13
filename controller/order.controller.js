@@ -88,11 +88,4 @@ const getOrderInvoiceType = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-
-
-
-
-
-
-
 module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType }
