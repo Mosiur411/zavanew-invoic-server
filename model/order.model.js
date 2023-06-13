@@ -79,7 +79,7 @@ OrderSchema.pre('save', function (next) {
         doc.orderId = 'zw' + numericPart;
         next();
     } else {
-        // next();
+        next();
     }
 });
 
