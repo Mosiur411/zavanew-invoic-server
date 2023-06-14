@@ -45,7 +45,7 @@ const addCart = async (req, res) => {
         } else {
             const qut = Number(checkProuct[0]?.quantity) + Number(data?.quantity);
             const productPrice = checkProuct[0]?.saleing_Price / Number(checkProuct[0]?.quantity)
-            //await ProductModel.findOneAndUpdate({ _id: product_id }, { quantity: handelProuct?.quantity - data?.quantity }, { new: true })
+            await ProductModel.findOneAndUpdate({ _id: product_id }, { quantity: handelProuct?.quantity - data?.quantity }, { new: true })
             addToCar = await CartModel.findOneAndUpdate({ product_id }, { quantity: qut, saleing_Price: productPrice * qut }, { new: true })
         }
         return res.status(200).json({ addToCar })
