@@ -42,7 +42,21 @@ const getOrder = async (req, res) => {
             if (role !== 'admin') {
                 order = await OrderModel.find({ user: _id }).sort({ _id: -1 }).populate(['user', 'coustomerId', 'item.product_id']);
             } else {
-                order = await OrderModel.find({}).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
+                if (searchQuery) {
+                    order = await OrderModel.find({
+                        $or: [
+                            { orderId: { $regex: search } },
+                            { checkProviderName: { $regex: search } },
+                            { checkNumber: { $regex: search } },
+                        ]
+                    })
+                        .sort({ _id: -1 })
+                        .skip(skip)
+                        .limit(limit)
+                        .populate(['user', 'coustomerId', 'item.product_id']);
+                } else {
+                    order = await OrderModel.find({}).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
+                }
                 totalPages = order.length;
             }
 
@@ -68,8 +82,6 @@ const putOrder = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-
-/* etOrderDue, getOrderCheck, getOrderCash */
 const getOrderInvoiceType = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 0;
@@ -80,7 +92,30 @@ const getOrderInvoiceType = async (req, res) => {
         let totalPages = Math.ceil(totalProduct / limit);
         const skip = page * limit;
         const invoiceType = req.query?.invoice;
-        const invoice = await OrderModel.find({ payment: invoiceType }).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
+        let invoice;
+        if (searchQuery) {
+            invoice = await OrderModel.find({
+                $and: [
+                    { payment: invoiceType },
+                    {
+                        $or: [
+                            { orderId: { $regex: search } },
+                            { checkProviderName: { $regex: search } },
+                            { checkNumber: { $regex: search } },
+                        ]
+                    }
+                ]
+            })
+                .sort({ _id: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate(['user', 'coustomerId', 'item.product_id']);
+
+
+        } else {
+            invoice = await OrderModel.find({ payment: invoiceType }).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
+        }
+
         return res.status(201).json({ invoice, totalPages });
 
     } catch (err) {
