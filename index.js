@@ -3,8 +3,19 @@ const cors = require('cors')
 const { connectDatabase } = require('./config/bd.config')
 const { Auth_Rqeuired } = require('./middleware/auth.middleware')
 const { initializeFirebase } = require('./config/firebase.config')
+const { userRoutes } = require('./routes/user.routes')
+const { developmentRoutes } = require('./routes/product/development.routes')
+const { categoriesRoutes } = require('./routes/product/categories.routes')
+const { subCategoriesRoutes } = require('./routes/product/subCategoties.router')
+const { childsubRoutes } = require('./routes/product/childSubCategories.router')
+const { productRoutes } = require('./routes/product/product.router')
+const { cartRoutes } = require('./routes/cart.routes')
+const { oderRoutes } = require('./routes/order.router')
+const { employeeRoutes } = require('./routes/employee.router')
+const { coustomerRoutes } = require('./routes/coustomer.router')
 const { dashboardRoutes } = require('./routes/dashboard.routes')
-
+const { refundRoutes } = require('./routes/refund.router')
+const { shrinkageRoutes } = require('./routes/shrinkage.router')
 
 require('dotenv').config()
 const app = express()
@@ -22,20 +33,20 @@ app.get('/', (req, res) => {
 
 /* dashboard.controller.js */
 app.use('/dashboard', Auth_Rqeuired, dashboardRoutes)
-// app.use('/', userRoutes)
-// app.use('/development', Auth_Rqeuired, developmentRoutes)
-// app.use('/categories', Auth_Rqeuired, categoriesRoutes)
-// app.use('/subCategories', Auth_Rqeuired, subCategoriesRoutes)
-// app.use('/childSubCategories', Auth_Rqeuired, childsubRoutes)
-// app.use('/product', Auth_Rqeuired, productRoutes)
+app.use('/', userRoutes)
+app.use('/development', Auth_Rqeuired, developmentRoutes)
+app.use('/categories', Auth_Rqeuired, categoriesRoutes)
+app.use('/subCategories', Auth_Rqeuired, subCategoriesRoutes)
+app.use('/childSubCategories', Auth_Rqeuired, childsubRoutes)
+app.use('/product', Auth_Rqeuired, productRoutes)
 
-// app.use('/cart', Auth_Rqeuired, cartRoutes)
-// app.use('/order', Auth_Rqeuired, oderRoutes)
-// app.use('/employee', Auth_Rqeuired, employeeRoutes)
-// app.use('/coustomer', Auth_Rqeuired, coustomerRoutes)
+app.use('/cart', Auth_Rqeuired, cartRoutes)
+app.use('/order', Auth_Rqeuired, oderRoutes)
+app.use('/employee', Auth_Rqeuired, employeeRoutes)
+app.use('/coustomer', Auth_Rqeuired, coustomerRoutes)
 
-// app.use('/refund', Auth_Rqeuired, refundRoutes)
-// app.use('/shrinkage', Auth_Rqeuired, shrinkageRoutes)
+app.use('/refund', Auth_Rqeuired, refundRoutes)
+app.use('/shrinkage', Auth_Rqeuired, shrinkageRoutes)
 
 
 
