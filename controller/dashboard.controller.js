@@ -1,7 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const { errorMessageFormatter } = require("../utils/helpers");
 const { ProductModel } = require("../model/product/product.model");
-const { CartModel } = require("../model/cart.model");
 const { OrderModel } = require("../model/order.model");
 const { PurchasesModel } = require("../model/purchases.model");
 const moment = require("moment/moment");
