@@ -91,8 +91,8 @@ const updateProduct = async (req, res) => {
         const { _id } = req.query;
         const data = req.body;
         const product = await ProductModel.findOneAndUpdate({ _id }, { ...data }, { new: true })
-        const activeCost = await PurchasesModel.findOne({ product_id: _id, status: true });
-        await PurchasesModel.findOneAndUpdate({ _id: activeCost._id }, { cost: product?.cost, quantity: product?.quantity }, { new: true })
+        // const activeCost = await PurchasesModel.findOne({ product_id: _id, status: true });
+        // await PurchasesModel.findOneAndUpdate({ _id: activeCost._id }, { cost: product?.cost, quantity: product?.quantity }, { new: true })
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
