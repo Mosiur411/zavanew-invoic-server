@@ -15,12 +15,12 @@ const addOrder = async (req, res) => {
             totalQuantity += items?.item[i].quantity;
         }
         const order = await OrderModel({ ...data, ...items, user: user, totalQuantity: totalQuantity })
-        await order.save()
+         await order.save()
         /* 
      const updateProduct = card?.map(async (data) => await ProductModel.updateOne({ _id: data?.product_id?._id }, { $set: { quantity: data?.product_id?.///quantity - data?.quantity } }));
       */
         const result = await CartModel.deleteMany({ user: { $in: user } });
-        return res.status(201).json({ result });
+        return res.status(201).json(order);
 
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
