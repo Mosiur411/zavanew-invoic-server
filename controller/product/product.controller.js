@@ -118,7 +118,7 @@ const deleteProduct = async (req, res) => {
 
 
 
-addPurchases = async (req, res) => {
+const addPurchases = async (req, res) => {
     try {
         const user = req?.user;
         const data = req?.body;
