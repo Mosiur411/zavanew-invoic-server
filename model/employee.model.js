@@ -53,6 +53,10 @@ const EmployeeSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    state: {
+        type: String,
+        trim: true,
+    },
     zip_code: {
         type: String,
         trim: true,
