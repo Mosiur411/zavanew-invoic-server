@@ -8,7 +8,7 @@ const { PurchasesModel } = require("../model/purchases.model");
 const purchases = async (product_id) => {
     try {
         const activeCost = await PurchasesModel.find({ product_id: product_id })
-        if (activeCost?.length == 1) result;
+        if (activeCost?.length == 1) return;
         const index = activeCost.findIndex((element) => element.status === true);
         console.log(activeCost)
         const oldCost = activeCost[index];
@@ -33,19 +33,22 @@ const addCart = async (req, res) => {
         const { product_id } = data
         let addToCar;
         const checkProuct = await CartModel.find({ user: user, product_id: product_id }).populate('product_id')
-        const handelProuct = await ProductModel.findById(product_id)
         if (checkProuct.length == 0) {
             const items = { ...data, user: user };
             addToCar = await CartModel(items)
-            const result = await ProductModel.findOneAndUpdate({ _id: product_id }, { quantity: handelProuct?.quantity - data?.quantity }, { new: true })
-            // if (result?.quantity === 0) {
-            //     await purchases(product_id)
-            // }
-           await addToCar.save()
+            const result = await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: Number(-data?.quantity), quantity: Number(-data?.quantity) } }, { new: true })
+            if (result?.quantity == 0) {
+                await purchases(result?._id)
+            }
+
+            await addToCar.save()
         } else {
             const qut = Number(checkProuct[0]?.quantity) + Number(data?.quantity);
             const productPrice = checkProuct[0]?.saleing_Price / Number(checkProuct[0]?.quantity)
-            await ProductModel.findOneAndUpdate({ _id: product_id }, { quantity: handelProuct?.quantity - data?.quantity }, { new: true })
+            const result = await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: Number(-data?.quantity), quantity: Number(-data?.quantity) } }, { new: true })
+            if (result?.quantity == 0) {
+                await purchases(result?._id)
+            }
             addToCar = await CartModel.findOneAndUpdate({ product_id }, { quantity: qut, saleing_Price: productPrice * qut }, { new: true })
         }
         return res.status(200).json({ addToCar })
@@ -54,6 +57,12 @@ const addCart = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+
+
+
+
+
+
 
 
 const getCart = async (req, res) => {
@@ -76,12 +85,11 @@ const getCart = async (req, res) => {
 const updateCart = async (req, res) => {
     try {
         const { _id, data, price } = req.query;
-        /* price  */
-        // const cardData = await CartModel.findById(_id).populate('product_id')
-        // const productPrice = cardData?.product_id?.price
+        const dataQuantity = Number(data)
+        const { quantity, product_id } = await CartModel.findOne({ _id: _id, user: req.user._id });
+        const UpdateProductQuantity = dataQuantity - Number(quantity)
         const cart = await CartModel.findOneAndUpdate({ _id }, { quantity: Number(data), saleing_Price: data * price }, { new: true })
-
-
+        await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: -UpdateProductQuantity, quantity: -UpdateProductQuantity } }, { new: true })
         return res.status(201).json({ cart })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)

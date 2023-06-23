@@ -5,13 +5,18 @@ const { validateObjectId } = require("../../utils/validators");
 const { doesDepartmentExist } = require("./development.controller");
 const { PurchasesModel } = require("../../model/purchases.model");
 
-
+const chcekPurchases = async ({ product_id }) => {
+    const get = await PurchasesModel.findOne({ product_id: product_id, status: true });
+    const result = get?.quantity >= 0 ? false : true;
+    return result;
+}
 const addProduct = async (req, res) => {
     try {
         const data = req.body;
         const product = await ProductModel.create({ ...data, user: req.user._id })
-        const purchaseAdd = { cost: product?.cost, quantity: product?.quantity, product_id: product?._id }
-        await PurchasesModel.create({ ...purchaseAdd, user: req.user._id })
+        product.stock = product?.quantity
+        await PurchasesModel.create({ product_id: product?._id, quantity: product?.quantity, cost: product?.cost, user: req.user._id, stock: product?.stock, status: true })
+        product.save()
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
@@ -89,11 +94,29 @@ const getProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { _id } = req.query;
-        const data = req.body;
-        const product = await ProductModel.findOneAndUpdate({ _id }, { ...data }, { new: true })
-        // const activeCost = await PurchasesModel.findOne({ product_id: _id, status: true });
-        // await PurchasesModel.findOneAndUpdate({ _id: activeCost._id }, { cost: product?.cost, quantity: product?.quantity }, { new: true })
+        const data = req?.body;
+        console.log(data)
+        if (!_id) return res.status(400).json({ Message: 'Product  Not select ' });
+        let purchaseUpdate = await PurchasesModel.findOne({ product_id: _id, status: true })
+        if (!purchaseUpdate?._id) return res.status(201).json({ message: 'Purchases Product Not Update' })
+        purchaseUpdate.cost = data?.cost
+        if (data?.quantity_action === '+') {
+            data.quantity = Number(data.quantity) + Number(data?.new_quantity)
+            data.stock = Number(data.stock) + Number(data?.new_quantity)
+            purchaseUpdate.stock = Number(purchaseUpdate?.stock) + Number(data?.new_quantity)
+            purchaseUpdate.quantity = Number(purchaseUpdate?.quantity) + Number(data?.new_quantity)
+        }
+        if (data?.quantity_action === '-') {
+            data.quantity = Number(data.quantity) - Number(data?.new_quantity)
+            data.stock = Number(data.stock) - Number(data?.new_quantity)
+            purchaseUpdate.stock = Number(purchaseUpdate?.stock) - Number(data?.new_quantity)
+            purchaseUpdate.quantity = Number(purchaseUpdate?.quantity) - Number(data?.new_quantity)
+        }
+        product = await ProductModel.findOneAndUpdate({ _id }, { ...data }, { new: true })
+        await PurchasesModel.findOneAndUpdate({ _id: purchaseUpdate?._id }, { ...purchaseUpdate }, { new: true })
+
         return res.status(201).json({ product })
+
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
@@ -105,34 +128,28 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
     try {
         const { _id } = req.query;
+        const purchases = await PurchasesModel.findOne({ product_id: _id, status: true })
         const product = await ProductModel.deleteOne({ _id: _id })
+        await PurchasesModel.deleteOne({ _id: purchases?._id })
         return res.status(201).json({ product })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
     }
 }
-
-
 /* all porduct Purchases  */
 
 
 
 const addPurchases = async (req, res) => {
     try {
-        const user = req?.user;
-        const data = req?.body;
-        const extraCostAdd = await PurchasesModel.create({ ...data, user: req.user._id })
-        return res.status(201).json(extraCostAdd)
-        /* const user = req?.user
-        await PurchasesModel.create({ product_id: _id, quantity: unitGross, cost: cost, user: req.user._id })
-
-        const products = await ProductModel.find({})
-        await products?.map(async (data) => {
-            const { _id, cost, unitGross } = data;
-            await PurchasesModel.create({ product_id: _id, quantity: unitGross, cost: cost, user: req.user._id })
-        })
-        return res.status(201).json({ message: "insoallha" }) */
+        const data = req.body;
+        const { product_id, cost, quantity } = data;
+        const sentResult = await chcekPurchases(data);
+        const extraPurchases = await PurchasesModel({ product_id: product_id, quantity: quantity, cost: cost, user: req.user._id, stock: quantity, status: sentResult })
+        await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: Number(quantity) } }, { new: true })
+        await extraPurchases.save()
+        return res.status(201).json(extraPurchases)
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)

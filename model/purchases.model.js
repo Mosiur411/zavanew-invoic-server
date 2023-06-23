@@ -16,14 +16,18 @@ const PurchasesSchema = new mongoose.Schema({
     },
     status: {
         type: Boolean,
-        default: false,/* false */
         trim: true,
+        default: false
     },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         trim: true,
         required: true,
         ref: 'Employee'
+    },
+    stock: {
+        type: Number,
+        trim: true,
     },
 
 }, { timestamps: true })

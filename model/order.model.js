@@ -1,4 +1,5 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const { SalesStatus, Distractions } = require("../utils/constants");
 const OrderSchema = new mongoose.Schema({
     item: [{
         product_id: {
@@ -65,7 +66,19 @@ const OrderSchema = new mongoose.Schema({
         trim: true,
         required: true,
         ref: 'Coustomer'
-    }
+    },
+    status: {
+        type: String,
+        trim: true,
+        required: true,
+        default: SalesStatus?.Pending,
+    },
+    distractions: {
+        type: String,
+        trim: true,
+        required: true,
+        default: Distractions?.Offline,
+    },
 
 }, { timestamps: true })
 
@@ -75,7 +88,7 @@ OrderSchema.pre('save', function (next) {
     if (doc.isNew) {
         const objectId = doc?.coustomerId;
         const objectIdString = objectId.toString();
-        const numericPart = objectIdString.substr(objectIdString.length - 6);
+        const numericPart = objectIdString.substr(objectIdString.length - 4);
         doc.orderId = 'zw' + numericPart;
         next();
     } else {

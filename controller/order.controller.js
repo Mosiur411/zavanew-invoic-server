@@ -1,8 +1,8 @@
 const { default: mongoose } = require("mongoose");
 const { errorMessageFormatter } = require("../utils/helpers");
-const { ProductModel } = require("../model/product/product.model");
 const { CartModel } = require("../model/cart.model");
 const { OrderModel } = require("../model/order.model");
+const { ProductModel } = require("../model/product/product.model");
 const addOrder = async (req, res) => {
 
     try {
@@ -15,13 +15,9 @@ const addOrder = async (req, res) => {
             totalQuantity += items?.item[i].quantity;
         }
         const order = await OrderModel({ ...data, ...items, user: user, totalQuantity: totalQuantity })
-         await order.save()
-        /* 
-     const updateProduct = card?.map(async (data) => await ProductModel.updateOne({ _id: data?.product_id?._id }, { $set: { quantity: data?.product_id?.///quantity - data?.quantity } }));
-      */
-        const result = await CartModel.deleteMany({ user: { $in: user } });
+        await order.save()
+        await CartModel.deleteMany({ user: { $in: user } });
         return res.status(201).json(order);
-
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
@@ -71,6 +67,7 @@ const getOrder = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+
 /* ================ order update  ================  */
 const putOrder = async (req, res) => {
     try {
@@ -83,6 +80,8 @@ const putOrder = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+
+
 const getOrderInvoiceType = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 0;
@@ -124,4 +123,42 @@ const getOrderInvoiceType = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType }
+const orderDelete = async (req, res) => {
+    const { _id } = req.query;
+    const order = await OrderModel.findOne({ _id: _id, user: req.user._id });
+    await order?.item?.map(async (data) => {
+        await ProductModel.findOneAndUpdate({ _id: data?.product_id }, { $inc: { stock: Number(data?.quantity), quantity: Number(data?.quantity) } }, { new: true })
+    })
+    const orderDlete = await OrderModel.deleteOne({ _id: _id })
+    return res.status(201).json(orderDlete);
+}
+
+/* order items add and update or delete*/
+
+const orderUpdateDelete = async (req, res) => {
+    const { item_id, order_id } = req.query;
+
+    const orderItemGet = await OrderModel.findOne({ _id: order_id, 'item._id': item_id }, { 'item.$': 1 },);
+    const { quantity, saleing_Price } = orderItemGet?.item[0]
+    // const orderDlete = await OrderModel.deleteOne({ _id: _id })
+    console.log(quantity)
+    console.log(saleing_Price)
+    console.log(orderItemGet)
+    //const item = await orderItemGet.item.find(item => item._id.toString() === item_id.toString());
+
+
+
+
+
+
+
+
+    // const order = await OrderModel.findOne({ _id: _id, user: req.user._id });
+    // await order?.item?.map(async (data) => {
+    //     await ProductModel.findOneAndUpdate({ _id: data?.product_id }, { $inc: { stock: Number(data?.quantity), quantity: Number(data?.quantity) } }, { new: true })
+    // })
+    // const orderDlete = await OrderModel.deleteOne({ _id: _id })
+    // return res.status(201).json(orderDlete);
+}
+
+module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete }
