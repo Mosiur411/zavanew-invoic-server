@@ -1,5 +1,5 @@
 const { Router } = require('express')
-const { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut, orderItemAdd } = require('../controller/order.controller')
+const { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut, orderItemAdd, salesAdd } = require('../controller/order.controller')
 const oderRoutes = Router()
 oderRoutes.post('/', addOrder)
 oderRoutes.get('/', getOrder)
@@ -12,6 +12,7 @@ oderRoutes.get('/invoice', getOrderInvoiceType)
 oderRoutes.delete('/update/items', orderUpdateDelete)
 oderRoutes.put('/update/items', orderUpdatePut)
 oderRoutes.put('/update/item/add', orderItemAdd)
+oderRoutes.post('/status', salesAdd)
 
 
 

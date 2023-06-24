@@ -3,6 +3,7 @@ const { errorMessageFormatter } = require("../utils/helpers");
 const { CartModel } = require("../model/cart.model");
 const { OrderModel } = require("../model/order.model");
 const { ProductModel } = require("../model/product/product.model");
+const { SalesModel } = require("../model/sales.model");
 const addOrder = async (req, res) => {
 
     try {
@@ -183,7 +184,7 @@ const orderItemAdd = async (req, res) => {
             },
             { new: true }
         )
-        await ProductModel.findOneAndUpdate({ _id: data?.product_id }, { $inc: { stock: -data?.quantity, quantity: -data?.quantity} }, { new: true })
+        await ProductModel.findOneAndUpdate({ _id: data?.product_id }, { $inc: { stock: -data?.quantity, quantity: -data?.quantity } }, { new: true })
 
         return res.status(201).json(orderinAddNewitem);
     } catch (err) {
@@ -191,6 +192,61 @@ const orderItemAdd = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
+// const salesAdd = async (req, res) => {
+//     try {
+//         const { order_id, status } = req.query;
+//         const user = req.user._id;
+//         const order = await OrderModel.findOne({ _id: order_id, user: user });
+//         const salesOrder = SalesModel(order)
+//         salesOrder.status = status;
+//         console.log(salesOrder)
+//         await salesOrder.save()
+//         await OrderModel.deleteOne({ _id: order_id })
+//         return res.status(201).json(salesOrder);
+
+//     } catch (err) {
+//         const errorMessage = errorMessageFormatter(err)
+//         return res.status(500).json(errorMessage)
+//     }
+// }
 
 
-module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut, orderItemAdd }
+const salesAdd = async (req, res) => {
+    try {
+        const { order_id, status } = req.query;
+        const user = req.user._id;
+        const order = await OrderModel.findOne({ _id: order_id, user: user });
+
+        // Assuming you have a SalesOrderModel defined for the sales order
+        const salesOrder = new SalesModel({
+            item: order.item,
+            payment: order.payment,
+            orderId: order.orderId,
+            address: order.address,
+            totalPrice: order.totalPrice,
+            totalQuantity: order.totalQuantity,
+            checkNumber: order.checkNumber,
+            checkProviderName: order.checkProviderName,
+            user: order.user,
+            coustomerId: order.coustomerId,
+            status: status,
+            distractions: order.distractions
+        });
+
+        console.log(salesOrder);
+        await salesOrder.save();
+        await OrderModel.deleteOne({ _id: order_id });
+        return res.status(201).json(salesOrder);
+
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err);
+        return res.status(500).json(errorMessage);
+    }
+};
+
+
+
+
+
+
+module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut, orderItemAdd, salesAdd }

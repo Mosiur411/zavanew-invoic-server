@@ -16,6 +16,7 @@ const { coustomerRoutes } = require('./routes/coustomer.router')
 const { dashboardRoutes } = require('./routes/dashboard.routes')
 const { refundRoutes } = require('./routes/refund.router')
 const { shrinkageRoutes } = require('./routes/shrinkage.router')
+const { salesRoutes } = require('./routes/sales.router')
 
 require('dotenv').config()
 const app = express()
@@ -47,6 +48,9 @@ app.use('/coustomer', Auth_Rqeuired, coustomerRoutes)
 
 app.use('/refund', Auth_Rqeuired, refundRoutes)
 app.use('/shrinkage', Auth_Rqeuired, shrinkageRoutes)
+
+/* sales  */
+app.use('/sales', Auth_Rqeuired, salesRoutes)
 
 
 
