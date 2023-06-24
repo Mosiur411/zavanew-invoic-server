@@ -71,8 +71,8 @@ const getOrder = async (req, res) => {
 /* ================ order update  ================  */
 const putOrder = async (req, res) => {
     try {
-        const { id } = req.query;
-        const data = req.body;
+        const { id, coustomerId } = req.query;
+        const data = { ...req.body, coustomerId: coustomerId };
         const product = await OrderModel.findOneAndUpdate({ _id: id }, { ...data }, { new: true })
         return res.status(201).json({ product });
     } catch (err) {
@@ -168,5 +168,29 @@ const orderUpdatePut = async (req, res) => {
     return res.status(201).json(UpdateItems);
 
 }
+const orderItemAdd = async (req, res) => {
+    try {
 
-module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut }
+        const { order_id } = req.query;
+        const data = req.body;
+        const user = req.user._id;
+        const newItem = { ...data, user: user }
+        const orderinAddNewitem = await OrderModel.findOneAndUpdate(
+            { '_id': order_id },
+            {
+                $push: { item: newItem },
+                $inc: { totalQuantity: data?.quantity, totalPrice: data?.saleing_Price }
+            },
+            { new: true }
+        )
+        await ProductModel.findOneAndUpdate({ _id: data?.product_id }, { $inc: { stock: -data?.quantity, quantity: -data?.quantity} }, { new: true })
+
+        return res.status(201).json(orderinAddNewitem);
+    } catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+
+
+module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut, orderItemAdd }
