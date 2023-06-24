@@ -134,31 +134,39 @@ const orderDelete = async (req, res) => {
 }
 
 /* order items add and update or delete*/
-
 const orderUpdateDelete = async (req, res) => {
     const { item_id, order_id } = req.query;
-
     const orderItemGet = await OrderModel.findOne({ _id: order_id, 'item._id': item_id }, { 'item.$': 1 },);
-    const { quantity, saleing_Price } = orderItemGet?.item[0]
-    // const orderDlete = await OrderModel.deleteOne({ _id: _id })
-    console.log(quantity)
-    console.log(saleing_Price)
-    console.log(orderItemGet)
-    //const item = await orderItemGet.item.find(item => item._id.toString() === item_id.toString());
+    const { quantity, saleing_Price, product_id } = orderItemGet?.item[0];
+    await OrderModel.findOneAndUpdate(
+        { _id: order_id },
+        {
+            $pull: { item: { _id: item_id } },
+            $inc: { totalQuantity: -quantity, totalPrice: -saleing_Price }
+        },
+        { new: true }
+    );
+    const deleteItems = await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: Number(quantity), quantity: Number(quantity) } }, { new: true })
+    return res.status(201).json(deleteItems);
+}
+const orderUpdatePut = async (req, res) => {
+    const { item_id, order_id, editQuantity, editPrices } = req.query;
+    const orderItemGet = await OrderModel.findOne({ _id: order_id, 'item._id': item_id }, { 'item.$': 1 },);
+    const { quantity, saleing_Price, product_id } = orderItemGet?.item[0];
+    const NowPrices = editQuantity * editPrices;
+    const NowQuantity = editQuantity - quantity
+    const NowTotalPrices = saleing_Price - NowPrices;
+    await OrderModel.findOneAndUpdate(
+        { '_id': order_id, 'item._id': item_id },
+        {
+            $set: { 'item.$.saleing_Price': NowPrices, 'item.$.quantity': editQuantity },
+            $inc: { totalQuantity: -NowQuantity, totalPrice: -NowTotalPrices }
+        },
+        { new: true }
+    )
+    const UpdateItems = await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: -NowQuantity, quantity: -NowQuantity } }, { new: true })
+    return res.status(201).json(UpdateItems);
 
-
-
-
-
-
-
-
-    // const order = await OrderModel.findOne({ _id: _id, user: req.user._id });
-    // await order?.item?.map(async (data) => {
-    //     await ProductModel.findOneAndUpdate({ _id: data?.product_id }, { $inc: { stock: Number(data?.quantity), quantity: Number(data?.quantity) } }, { new: true })
-    // })
-    // const orderDlete = await OrderModel.deleteOne({ _id: _id })
-    // return res.status(201).json(orderDlete);
 }
 
-module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete }
+module.exports = { addOrder, getOrder, putOrder, getOrderInvoiceType, orderDelete, orderUpdateDelete, orderUpdatePut }
