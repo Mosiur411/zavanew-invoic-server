@@ -6,6 +6,7 @@ const { PurchasesModel } = require("../model/purchases.model");
 const moment = require("moment/moment");
 const { RefundModel } = require("../model/refund.model");
 const { ShrinkageModel } = require("../model/shrinkage.model");
+const { SalesModel } = require("../model/sales.model");
 
 const getRrecord = async (req, res) => {
     try {
@@ -43,7 +44,7 @@ const getRrecord = async (req, res) => {
             ];
         }
 
-        const sale = await OrderModel.aggregate([
+        const sale = await SalesModel.aggregate([
              { $match: reportOptions.filter },
              { $sort: reportOptions.sort },
             ...pipeline,
@@ -67,7 +68,7 @@ const getRrecord = async (req, res) => {
                 }
             }
         ]);
-        const product = await ProductModel.aggregate([
+        const purchases = await PurchasesModel.aggregate([
             ...pipeline,
             {
                 $group: {
@@ -88,6 +89,8 @@ const getRrecord = async (req, res) => {
                 }
             }
         ])
+
+
 
         let payment = await OrderModel.aggregate([
 
@@ -112,6 +115,10 @@ const getRrecord = async (req, res) => {
             }
         }
         payment = { totalInvoic: invoicTotal, totalDue: totalDue }
+
+
+
+
 
         const refund = await RefundModel.aggregate([
             { $match: reportOptions.filter },
@@ -150,7 +157,10 @@ const getRrecord = async (req, res) => {
             }
         ]);
 
-        return res.status(200).json({ products: product, sale: sale, payment: payment, refund: refund, shrinkage: shrinkage })
+
+
+
+        return res.status(200).json({ purchases: purchases, sale: sale, payment: payment, refund: refund, shrinkage: shrinkage })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)

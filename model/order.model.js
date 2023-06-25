@@ -26,6 +26,12 @@ const OrderSchema = new mongoose.Schema({
             required: true,
             ref: 'User'
         },
+        purchases_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            trim: true,
+            required: true,
+            ref: 'Purchases'
+        },
     }],
     payment: {
         type: String,
@@ -34,6 +40,7 @@ const OrderSchema = new mongoose.Schema({
     orderId: {
         type: String,
         trim: true,
+        required: true,
     },
     address: {
         type: String,
@@ -81,20 +88,6 @@ const OrderSchema = new mongoose.Schema({
     },
 
 }, { timestamps: true })
-
-// Pre-save middleware
-OrderSchema.pre('save', function (next) {
-    const doc = this;
-    if (doc.isNew) {
-        const objectId = doc?.coustomerId;
-        const objectIdString = objectId.toString();
-        const numericPart = objectIdString.substr(objectIdString.length - 4);
-        doc.orderId = 'zw' + numericPart;
-        next();
-    } else {
-        next();
-    }
-});
 
 
 module.exports = {

@@ -30,11 +30,13 @@ const addCart = async (req, res) => {
     try {
         const data = req.body;
         const user = req.user._id;
-        const { product_id } = data
+        const { product_id } = data;
+        const purchases_id = await PurchasesModel.findOne({ product_id: product_id, status: true })
+
         let addToCar;
         const checkProuct = await CartModel.find({ user: user, product_id: product_id }).populate('product_id')
         if (checkProuct.length == 0) {
-            const items = { ...data, user: user };
+            const items = { ...data, user: user, purchases_id: purchases_id._id };
             addToCar = await CartModel(items)
             const result = await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: Number(-data?.quantity), quantity: Number(-data?.quantity) } }, { new: true })
             if (result?.quantity == 0) {
@@ -52,6 +54,7 @@ const addCart = async (req, res) => {
             addToCar = await CartModel.findOneAndUpdate({ product_id }, { quantity: qut, saleing_Price: productPrice * qut }, { new: true })
         }
         return res.status(200).json({ addToCar })
+
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)

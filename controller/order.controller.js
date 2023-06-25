@@ -4,6 +4,7 @@ const { CartModel } = require("../model/cart.model");
 const { OrderModel } = require("../model/order.model");
 const { ProductModel } = require("../model/product/product.model");
 const { SalesModel } = require("../model/sales.model");
+const { PurchasesModel } = require("../model/purchases.model");
 const addOrder = async (req, res) => {
 
     try {
@@ -11,11 +12,18 @@ const addOrder = async (req, res) => {
         const data = req.body;
         const user = req.user._id;
         const card = await CartModel.find({ user: user }).sort({ _id: -1 }).populate('product_id');
+        const totalOrder = await SalesModel.countDocuments();
         const items = { item: [...card] }
         for (let i = 0; i < items?.item.length; i++) {
             totalQuantity += items?.item[i].quantity;
         }
         const order = await OrderModel({ ...data, ...items, user: user, totalQuantity: totalQuantity })
+        console.log(order)
+        const value = `${order?._id}`;
+        const stringValue = value.toString();
+        const randomIndex = Math.floor(Math.random() * (stringValue.length - 3));
+        const randomChoice = stringValue.substring(randomIndex, randomIndex + 3);
+        order.orderId = 'ZW-' + randomChoice + (totalOrder + 1)
         await order.save()
         await CartModel.deleteMany({ user: { $in: user } });
         return res.status(201).json(order);
@@ -55,12 +63,10 @@ const getOrder = async (req, res) => {
                 } else {
                     order = await OrderModel.find({}).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
                 }
-                totalPages = order.length;
             }
 
         } else {
             order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
-            totalPages = order.length;
         }
         return res.status(200).json({ order, totalPages })
     } catch (err) {
@@ -192,24 +198,6 @@ const orderItemAdd = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-// const salesAdd = async (req, res) => {
-//     try {
-//         const { order_id, status } = req.query;
-//         const user = req.user._id;
-//         const order = await OrderModel.findOne({ _id: order_id, user: user });
-//         const salesOrder = SalesModel(order)
-//         salesOrder.status = status;
-//         console.log(salesOrder)
-//         await salesOrder.save()
-//         await OrderModel.deleteOne({ _id: order_id })
-//         return res.status(201).json(salesOrder);
-
-//     } catch (err) {
-//         const errorMessage = errorMessageFormatter(err)
-//         return res.status(500).json(errorMessage)
-//     }
-// }
-
 
 const salesAdd = async (req, res) => {
     try {
@@ -233,7 +221,9 @@ const salesAdd = async (req, res) => {
             distractions: order.distractions
         });
 
-        console.log(salesOrder);
+        order?.item?.map(async (data) => {
+            await PurchasesModel.findOneAndUpdate({ _id: data?.purchases_id }, { $inc: { quantity: Number(-data?.quantity) } }, { new: true })
+        })
         await salesOrder.save();
         await OrderModel.deleteOne({ _id: order_id });
         return res.status(201).json(salesOrder);

@@ -17,7 +17,7 @@ const ShrinkageSchema = new mongoose.Schema({
         required: true,
         ref: 'Employee'
     },
-    order_id: {
+    sales_id: {
         type: mongoose.Schema.Types.ObjectId,
         trim: true,
         required: true,

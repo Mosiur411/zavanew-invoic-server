@@ -1,21 +1,28 @@
 const { default: mongoose } = require("mongoose");
 const { errorMessageFormatter } = require("../../utils/helpers");
 const { ShrinkageModel } = require("../../model/shrinkage.model");
+const { SalesModel } = require("../../model/sales.model");
 
 
 const addShrinkage = async (req, res) => {
     try {
         const user = req.user;
+        const { sales_id, item_id, quantity, saleing_Price} = req.body
         const data = req.body;
         const saveshrinkage = await ShrinkageModel({ ...data, user: user });
+        const newTotalPrices = Number(saleing_Price) * Number(quantity)
+        await SalesModel.findOneAndUpdate(
+            { '_id': sales_id, 'item._id': item_id },
+            {
+                $inc: {
+                    'item.$.saleing_Price': -newTotalPrices, 'item.$.quantity': -quantity,
+                    totalQuantity: -quantity, totalPrice: -newTotalPrices
+                }
+            },
+            { new: true }
+        );
         await saveshrinkage.save()
-
-        // await order.save()
-
-        // const { order_id, item_id } = req.body;
-        // const result = await OrderModel.findOne({ _id: order_id, 'item._id': item_id }, { 'item.$': 1 }).populate(['user', 'coustomerId', 'item.product_id']).select('payment totalPrice totalQuantity').exec();
-        return res.status(300).json({saveshrinkage})
-
+        return res.status(300).json({ saveshrinkage })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
@@ -48,4 +55,4 @@ const deleteShrinkage = async (req, res) => {
     }
 }
 
-module.exports = {addShrinkage, getShrinkage, updateShrinkage, deleteShrinkage}
+module.exports = { addShrinkage, getShrinkage, updateShrinkage, deleteShrinkage }

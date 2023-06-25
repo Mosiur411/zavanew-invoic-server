@@ -2,20 +2,35 @@ const { default: mongoose } = require("mongoose");
 const { errorMessageFormatter } = require("../../utils/helpers");
 const { OrderModel } = require("../../model/order.model");
 const { RefundModel } = require("../../model/refund.model");
+const { SalesModel } = require("../../model/sales.model");
+const { PurchasesModel } = require("../../model/purchases.model");
+const { ProductModel } = require("../../model/product/product.model");
 
 
 const addRefund = async (req, res) => {
     try {
         const user = req.user;
+        const { product_id, sales_id, item_id, quantity, saleing_Price, purchases_id } = req.body
         const data = req.body;
         const saverefund = await RefundModel({ ...data, user: user });
+        const newTotalPrices = Number(saleing_Price) * Number(quantity)
+        await SalesModel.findOneAndUpdate(
+            { '_id': sales_id, 'item._id': item_id },
+            {
+                $inc: {
+                    'item.$.saleing_Price': -newTotalPrices,
+                    'item.$.quantity': -quantity,
+                    totalQuantity: -quantity,
+                    totalPrice: -newTotalPrices
+                }
+            },
+            { new: true }
+        )
+        await ProductModel.findOneAndUpdate({ _id: product_id }, { $inc: { stock: quantity, quantity: quantity } }, { new: true })
+        await PurchasesModel.findOneAndUpdate({ _id: purchases_id }, { $inc: { quantity: quantity } }, { new: true })
+
         await saverefund.save()
-
-        // await order.save()
-
-        // const { order_id, item_id } = req.body;
-        // const result = await OrderModel.findOne({ _id: order_id, 'item._id': item_id }, { 'item.$': 1 }).populate(['user', 'coustomerId', 'item.product_id']).select('payment totalPrice totalQuantity').exec();
-        return res.status(300).json({saverefund})
+        return res.status(300).json({ saverefund })
 
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)

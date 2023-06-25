@@ -11,13 +11,19 @@ const RefundSchema = new mongoose.Schema({
         trim: true,
         required: true,
     },
+    purchases_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        trim: true,
+        required: true,
+        ref: 'Purchases'
+    },
     user: {
         type: mongoose.Schema.Types.ObjectId,
         trim: true,
         required: true,
         ref: 'Employee'
     },
-    order_id: {
+    sales_id: {
         type: mongoose.Schema.Types.ObjectId,
         trim: true,
         required: true,
