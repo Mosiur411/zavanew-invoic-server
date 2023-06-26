@@ -59,7 +59,10 @@ const addBulkProduct = async (req, res) => {
         if (!file) return res.status(400).json({ error: '"products_csv" is required.' })
         const productsFromCSV = await getDataFromCsv(file.path, req.user._id)
         const products = await ProductModel.insertMany(productsFromCSV)
-        return res.status(201).json({ products })
+        const result = products.map(async (data) => {
+            await PurchasesModel.create({ product_id: data?._id, quantity: data?.quantity, cost: data?.cost, user: req.user._id, stock: data?.quantity, status: true })
+        })
+        return res.status(201).json({ products, result })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)

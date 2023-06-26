@@ -92,7 +92,7 @@ const getRrecord = async (req, res) => {
 
 
 
-        let payment = await OrderModel.aggregate([
+        let payment = await SalesModel.aggregate([
 
             ...pipeline,
             { $match: reportOptions.filter },

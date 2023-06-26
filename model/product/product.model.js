@@ -46,7 +46,7 @@ const ProductSchema = new mongoose.Schema({
     product_name: {
         type: String,
         trim: true,
-        required: true,
+        // required: true,
     },
     upc: {
         type: String,

@@ -36,6 +36,7 @@ const OrderSchema = new mongoose.Schema({
     payment: {
         type: String,
         trim: true,
+        lowercase: true,
     },
     orderId: {
         type: String,

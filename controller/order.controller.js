@@ -5,6 +5,7 @@ const { OrderModel } = require("../model/order.model");
 const { ProductModel } = require("../model/product/product.model");
 const { SalesModel } = require("../model/sales.model");
 const { PurchasesModel } = require("../model/purchases.model");
+const { SalesStatus } = require("../utils/constants");
 const addOrder = async (req, res) => {
 
     try {
@@ -34,6 +35,7 @@ const addOrder = async (req, res) => {
 }
 const getOrder = async (req, res) => {
     try {
+        let sumTotaloldPrices = 0;
         const { id } = req.query;
         const { role, _id } = req.user;
         const page = parseInt(req.query.page) || 0;
@@ -67,8 +69,13 @@ const getOrder = async (req, res) => {
 
         } else {
             order = await OrderModel.find({ _id: id }).sort({ _id: -1 }).skip(skip).limit(limit).populate(['user', 'coustomerId', 'item.product_id']);
+            const GetDuePayment = await SalesModel.find({ coustomerId: order[0]?.coustomerId?._id, user: req.user._id, payment: 'due' })
+            GetDuePayment.forEach((sale) => {
+                sumTotaloldPrices += sale?.totalPrice;
+            });
+
         }
-        return res.status(200).json({ order, totalPages })
+        return res.status(200).json({ order, totalPages, sumTotaloldPrices })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
@@ -203,30 +210,34 @@ const salesAdd = async (req, res) => {
     try {
         const { order_id, status } = req.query;
         const user = req.user._id;
-        const order = await OrderModel.findOne({ _id: order_id, user: user });
+        if (status !== SalesStatus.Delivered) {
+            const result = await OrderModel.findOneAndUpdate({ _id: order_id, user: user }, { status: status }, { new: true });
+            return res.status(201).json(result);
+        } else {
+            const order = await OrderModel.findOne({ _id: order_id, user: user });
+            const salesOrder = new SalesModel({
+                item: order.item,
+                payment: order.payment,
+                orderId: order.orderId,
+                address: order.address,
+                totalPrice: order.totalPrice,
+                totalQuantity: order.totalQuantity,
+                checkNumber: order.checkNumber,
+                checkProviderName: order.checkProviderName,
+                user: order.user,
+                coustomerId: order.coustomerId,
+                status: status,
+                distractions: order.distractions
+            });
 
-        // Assuming you have a SalesOrderModel defined for the sales order
-        const salesOrder = new SalesModel({
-            item: order.item,
-            payment: order.payment,
-            orderId: order.orderId,
-            address: order.address,
-            totalPrice: order.totalPrice,
-            totalQuantity: order.totalQuantity,
-            checkNumber: order.checkNumber,
-            checkProviderName: order.checkProviderName,
-            user: order.user,
-            coustomerId: order.coustomerId,
-            status: status,
-            distractions: order.distractions
-        });
+            order?.item?.map(async (data) => {
+                await PurchasesModel.findOneAndUpdate({ _id: data?.purchases_id }, { $inc: { quantity: Number(-data?.quantity) } }, { new: true })
+            })
+            await salesOrder.save();
+            await OrderModel.deleteOne({ _id: order_id });
+            return res.status(201).json(salesOrder);
+        }
 
-        order?.item?.map(async (data) => {
-            await PurchasesModel.findOneAndUpdate({ _id: data?.purchases_id }, { $inc: { quantity: Number(-data?.quantity) } }, { new: true })
-        })
-        await salesOrder.save();
-        await OrderModel.deleteOne({ _id: order_id });
-        return res.status(201).json(salesOrder);
 
     } catch (err) {
         const errorMessage = errorMessageFormatter(err);

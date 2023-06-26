@@ -54,7 +54,7 @@ const getSales = async (req, res) => {
             }
             totalPages = sales.length;
         }
-        return res.status(200).json({sales, totalPages})
+        return res.status(200).json({ sales, totalPages })
     } catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
@@ -72,16 +72,36 @@ const SalesStatusHandel = async (req, res) => {
         return res.status(500).json(errorMessage)
     }
 }
-
-const SingleSales = async (req, res) => {
+const SalesPaymentHandel = async (req, res) => {
     try {
-        const { id } = req.query;
-        const sales = await SalesModel.findById(id).populate(['user', 'coustomerId', 'item.product_id']);
-        return res.status(200).json(sales)
+        const { _id } = req.query;
+        const data = req?.body;
+        const paymentResult = await SalesModel.findOneAndUpdate({ _id: _id }, { ...data }, { new: true })
+        return res.status(200).json({ paymentResult })
     }
     catch (err) {
         const errorMessage = errorMessageFormatter(err)
         return res.status(500).json(errorMessage)
     }
 }
-module.exports = { getSales, SalesStatusHandel, SingleSales }
+
+const SingleSales = async (req, res) => {
+    try {
+        let sumTotaloldPrices = 0;
+        const { id } = req.query;
+        const sales = await SalesModel.findById(id).populate(['user', 'coustomerId', 'item.product_id']);
+
+        const GetDuePayment = await SalesModel.find({ coustomerId: sales?.coustomerId?._id, user: req.user._id, payment: 'due' })
+        GetDuePayment.forEach((sale) => {
+            sumTotaloldPrices  += sale?.totalPrice;
+        });
+
+
+        return res.status(200).json({ sales, sumTotaloldPrices })
+    }
+    catch (err) {
+        const errorMessage = errorMessageFormatter(err)
+        return res.status(500).json(errorMessage)
+    }
+}
+module.exports = { getSales, SalesStatusHandel, SingleSales, SalesPaymentHandel }
